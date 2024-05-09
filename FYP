@@ -2,7 +2,7 @@ Map.centerObject(Nairobi,11)
 var maxAoiArea = 8e11;
 var aoiArea = null;
 
-var palette = ['000004', '2C105C', '711F81', 'B63679', 'EE605E', 'FDAE78', 'FCFDBF'];
+var palette = ['#0c0937','#0f1876', '#1865d4', '#10cdd4', '#0ed476', '#24d40d', '#e8df19', '#ff5c21','#ff3207'];
 
 var dataInfo = {
   'Nitrogen dioxide': {
@@ -200,11 +200,10 @@ ui.url.set('rightdate', rightSliderDateUrl);
 
 dateInfo.left.selected = leftSliderDateUrl;
 dateInfo.right.selected = rightSliderDateUrl;
-
 var minStretchVal = ui.url.get('min', 20);
 ui.url.set('min', minStretchVal);
-thisData.visParams.min = minStretchVal;
 
+thisData.visParams.min = minStretchVal;
 var maxStretchVal = ui.url.get('max', 400);
 ui.url.set('max', maxStretchVal);
 thisData.visParams.max = maxStretchVal;
@@ -212,15 +211,12 @@ thisData.visParams.max = maxStretchVal;
 function getMinMaxDate() {
   var col = ee.ImageCollection(thisData.colId)
     .filterBounds(aoi);
-
   var dataDateRange = ee.Dictionary(col.reduceColumns(
     {reducer: ee.Reducer.minMax(), selectors: ['system:time_start']}));
-  
   var firstDate = ee.Date(dataDateRange.get('min'));
   var lastDate = ee.Date(dataDateRange.get('max'));
   return ee.Dictionary({firstDate: firstDate, lastDate: lastDate});
 }
-
 function leftDateHandler() {
   leftLabel.style().set({shown: false});
   var selectedDate = ee.Date(ee.List(leftDatePanel.widgets().get(1).getValue()).get(0));
@@ -234,7 +230,6 @@ function leftDateHandler() {
     drawChart();
   });
 }
-
 function rightDateHandler() {
   rightLabel.style().set({shown: false});
   var selectedDate = ee.Date(ee.List(rightDatePanel.widgets().get(1).getValue()).get(0));
@@ -266,7 +261,7 @@ var leftSliderDate = ui.DateSlider({
   period: 1,
   style: {stretch: 'horizontal', shown: true}});
 leftSliderDate.setDisabled(true);
-  
+
 var rightSliderDate = ui.DateSlider({
   start: '2020-01-01',
   end: '2020-02-01',
@@ -279,10 +274,10 @@ var dataSelectPanel = ui.Panel({
   widgets: [dataSelector, colSelector],
   layout: ui.Panel.Layout.flow('horizontal'), style: {stretch: 'horizontal'}
 });
-
 var dateSliderLabelWidth = '45px';
 var cloudFracSlider = ui.Slider({min: 0, max: 100, value: cloudPct, step: 1, style: {stretch: 'horizontal'}});
 cloudFracSlider.setDisabled(true);
+
 var leftDateLabel = ui.Label({value: 'LEFT:', style: {width: dateSliderLabelWidth, color: '000', fontWeight: 'bold', padding: '25px 0px 0px 0px'}});
 var leftDatePanel = ui.Panel({
   widgets: [leftDateLabel, leftSliderDate],
@@ -290,12 +285,12 @@ var leftDatePanel = ui.Panel({
   style: {stretch: 'horizontal'}
 });
 var rightDateLabel = ui.Label({value: 'RIGHT:', style: {width: dateSliderLabelWidth, color: '000', fontWeight: 'bold', padding: '25px 0px 0px 0px'}});
+
 var rightDatePanel = ui.Panel({
   widgets: [rightDateLabel, rightSliderDate],
   layout: ui.Panel.Layout.flow('horizontal'),
   style: {stretch: 'horizontal'}
 });
-
 var minVis = ui.Slider({
   min: thisData.viewWindow.min+0.0,
   max: thisData.viewWindow.max+0.0,
@@ -304,7 +299,6 @@ var minVis = ui.Slider({
   style: {stretch: 'horizontal'},
   onChange: updateStretch
 });
-  
 var maxVis = ui.Slider({
   min: thisData.viewWindow.min+0.0,
   max: thisData.viewWindow.max+0.0,
@@ -313,13 +307,11 @@ var maxVis = ui.Slider({
   style: {stretch: 'horizontal'},
   onChange: updateStretch
 });
-
 var stretchPanel = ui.Panel({
   widgets: [ui.Label('Min:'), minVis, ui.Label('Max:'), maxVis],
   layout: ui.Panel.Layout.flow('horizontal'),
   style: {stretch: 'horizontal'}
 });
-
 var cloudFracIndex = 0;
 var leftDateIndex = 0;
 var rightDateIndex = 0;
@@ -339,27 +331,22 @@ var mapComparison = ui.Panel([
   // ui.Label('[legend]'),
   ui.Label('[Swipe to Switch]')
 ]);
-
 infoPanel.add(intro);
 var panelBreak25 = ui.Panel(null, null, {stretch: 'horizontal', height: '1px', backgroundColor: '000', margin: '8px 0px 8px 0px'});
 infoPanel.add(panelBreak25);
 infoPanel.add(mapComparison);
-
 function dataSelectorHandler(e) {
   var datasetFromClick = dataSelector.getValue();
   var dataTypeFromClick = colSelector.getValue();
   ui.url.set('dataset', datasetFromClick);
   ui.url.set('datatype', dataTypeFromClick);
-  
   thisData = dataInfo[datasetFromClick];
   thisData.colId = thisData[dataTypeFromClick];
-  
   if(thisData.cloudBand !== '') {
     cloudFracSlider.setDisabled(false);
   } else {
     cloudFracSlider.setDisabled(true);
   }
-  
   var minVis = ui.Slider({
     min: thisData.viewWindow.min+0.0,
     max: thisData.viewWindow.max+0.0,
@@ -368,7 +355,6 @@ function dataSelectorHandler(e) {
     style: {stretch: 'horizontal'},
     onChange: updateStretch
   });
-  
   var maxVis = ui.Slider({
     min: thisData.viewWindow.min+0.0,
     max: thisData.viewWindow.max+0.0,
@@ -377,19 +363,15 @@ function dataSelectorHandler(e) {
     style: {stretch: 'horizontal'},
     onChange: updateStretch
   });
-  
   stretchPanel.widgets().set(1, minVis);
   stretchPanel.widgets().set(3, maxVis);
   thisData.visParams.min = stretchPanel.widgets().get(1).getValue();
   thisData.visParams.max = stretchPanel.widgets().get(3).getValue();
   ui.url.set('min', thisData.visParams.min);
   ui.url.set('max', thisData.visParams.max);
-  
   updateLeftSliderDate();
   updateRightSliderDate();
-
   makeLegend();
-
   aoi.area(1000).evaluate(function(area) {
     aoiArea = area;
     if(area > maxAoiArea){
@@ -405,27 +387,22 @@ function dataSelectorHandler(e) {
     }
   });
 }
-
 dataSelector.onChange(dataSelectorHandler);
 colSelector.onChange(dataSelectorHandler);
 
 // ### LETS INITIALIZE THE NO2 
-
 function maskClouds(img) {
   var cloudMask = img.select(thisData.cloudBand).lte(cloudFrac);
   return img.updateMask(cloudMask);
 }
-
 function compositeImages(targetDate) {
   var startDate = targetDate.advance(-4, 'day');
   var endDate = targetDate.advance(5, 'day');
   var dateFilter = ee.Filter.date(startDate, endDate);
   var col = ee.ImageCollection(thisData.colId).filter(dateFilter);
-
   if(thisData.cloudBand !== '') {
     col = col.map(maskClouds);
   }
-
   return col.select(thisData.band).reduce(ee.Reducer.mean()).multiply(thisData.scalar).clip(Nairobi);
 }
 
@@ -436,22 +413,15 @@ var leftLabel = ui.Label('[leftLabel]',
 var rightLabel = ui.Label('[rightLabel]',
   {shown: false, position: 'bottom-right', fontWeight: 'bold', color:'000',
   fontSize: '18px', backgroundColor: 'rgba(255, 255, 255, 1.0)'}); 
-
 var leftMap = ui.Map().centerObject(Nairobi, 10);
 var rightMap = ui.Map().centerObject(Nairobi, 10);
-
 leftMap.setControlVisibility({layerList: false, zoomControl: false, fullscreenControl: false});
 rightMap.setControlVisibility({layerList: false, zoomControl: false, fullscreenControl: false});
-
 leftMap.drawingTools().setShown(false);
 rightMap.drawingTools().setShown(false);
-
-
 var linker = ui.Map.Linker([leftMap, rightMap]);
-
 var swipeStatus = ui.url.get('swipe', false);
 ui.url.set('swipe', swipeStatus);
-
 var sliderPanel = ui.SplitPanel({
   firstPanel: linker.get(0),
   secondPanel: linker.get(1),
@@ -459,15 +429,12 @@ var sliderPanel = ui.SplitPanel({
   wipe: swipeStatus,
   style: {stretch: 'both'}
 });
-
 var swipeButtonLabel = 'Show swipe display';
 if(swipeStatus) {
   swipeButtonLabel = 'Show side-by-side display';
 }
-
 var swipeButton = ui.Button(swipeButtonLabel, switchSwipe, null, {position: 'top-left', });
 mapComparison.widgets().set(swipeSwitchIndex, swipeButton);
-
 function switchSwipe() {
   if(swipeStatus) {
     sliderPanel.setWipe(false);
@@ -481,7 +448,6 @@ function switchSwipe() {
     ui.url.set('swipe', 'true');
   }
 }
-
 function updateCloudFracSlider(val) {
   cloudPct = val;
   ui.url.set('cloud', val);
@@ -504,11 +470,9 @@ function updateCloudFracSlider(val) {
   });
 }
 cloudFracSlider.onChange(updateCloudFracSlider);
-
 function updateLeftSliderDate() {
   leftDatePanel.widgets().get(1).setDisabled(true); 
   leftLabel.style().set({shown: false});
-  
   var dateRange = getMinMaxDate();
   var firstDate = ee.Date(dateRange.get('firstDate'));
   var firstDateMillis = ee.Date(dateRange.get('firstDate')).millis();
@@ -526,10 +490,8 @@ function updateLeftSliderDate() {
     lastDate,
     selectedDate
   ));
-  
   var img = compositeImages(selectedDate);
   leftMap.layers().set(0, ui.Map.Layer(img.clip(Nairobi), thisData.visParams, null, true, 0.55));
-  
   ee.Dictionary({
     firstDate: firstDate.format('YYYY-MM-dd'),
     lastDate: lastDate.format('YYYY-MM-dd'),
@@ -550,11 +512,9 @@ function updateLeftSliderDate() {
     drawChart();
   });
 }
-
 function updateRightSliderDate() {
   rightDatePanel.widgets().get(1).setDisabled(true);
   rightLabel.style().set({shown: false});
-  
   var dateRange = getMinMaxDate();
   var firstDate = ee.Date(dateRange.get('firstDate'));
   var firstDateMillis = ee.Date(dateRange.get('firstDate')).millis();
@@ -572,10 +532,8 @@ function updateRightSliderDate() {
     lastDate,
     selectedDate
   ));
-  
   var img = compositeImages(selectedDate);
   rightMap.layers().set(0, ui.Map.Layer(img.clip(Nairobi), thisData.visParams, null, true, 0.55));
-  
   ee.Dictionary({
     firstDate: firstDate.format('YYYY-MM-dd'),
     lastDate: lastDate.format('YYYY-MM-dd'),
@@ -596,7 +554,6 @@ function updateRightSliderDate() {
     drawChart();
   });
 }
-
 function updateStretch() {
   thisData.visParams.min = stretchPanel.widgets().get(1).getValue();
   thisData.visParams.max = stretchPanel.widgets().get(3).getValue();
@@ -610,7 +567,6 @@ function updateStretch() {
 }
 
 // ### LETS SETUP THE CHARTS PANEL ###
-
 var noPlotLabel = ui.Label({value: 'Drawn geometry is too large',
   style: {position: 'top-left', color: 'EE605E', fontWeight: 'bold', shown: false}});
 var contChart = ui.Label({value: '', style: {position: 'top-left', shown: false}});
@@ -618,10 +574,8 @@ var yoyChart = ui.Label({value: '', style: {position: 'top-left', shown: false}}
 var tsChart = ui.Panel([noPlotLabel, contChart, yoyChart]);
 
 //  DEALING WITH GEOMETRY DRAWING ###
-
 var drawingTools = leftMap.drawingTools();
 var drawingToolsRight = rightMap.drawingTools();
-
 while (drawingTools.layers().length() > 0) {
   var layer = drawingTools.layers().get(0);
   drawingTools.layers().remove(layer);
@@ -632,27 +586,21 @@ drawingToolsRight.addLayer([aoi], null, 'FFF');
 drawingToolsRight.layers().get(0).setLocked(true);
 
 // ### SETUP APP DISPLAY ###
-
 var mapChartSplitPanel = ui.Panel(ui.SplitPanel({
   firstPanel: ui.Panel(sliderPanel, null, {height: '62%'}), //
   secondPanel: tsChart,
   orientation: 'vertical',
   wipe: false,
 }));
-
 var splitPanel = ui.SplitPanel(infoPanel, mapChartSplitPanel);
-
 ui.root.widgets().reset([splitPanel]);
-
 leftMap.onChangeBounds(function(e) {
   ui.url.set('center', ee.Geometry.Point(e.lon, e.lat).toGeoJSONString());
   ui.url.set('zoom', e.zoom);
 });
-
 leftMap.centerObject(ee.Geometry(JSON.parse(center)), parseInt(zoom));
 
 // ### INITIALIZE MAP DATA ###
-
 var blankImg = ee.Image(0).selfMask();
 leftMap.addLayer(blankImg);
 rightMap.addLayer(blankImg);
@@ -666,10 +614,8 @@ updateLeftSliderDate();
 updateRightSliderDate();
 
 // ### CHART DATA ###
-
 var firstChart = true;
 function chartTimeSeries() {
-  
   var no2ImgTs = ee.ImageCollection(thisData.colId)
     .filterBounds(aoi)
     .map(function(img){
@@ -679,9 +625,7 @@ function chartTimeSeries() {
   if(thisData.cloudBand !== '') {
     no2ImgTs = no2ImgTs.map(maskClouds);
   }
-  
   no2ImgTs = no2ImgTs.select(thisData.band);
-  
   var dataDateRange = ee.Dictionary(no2ImgTs.reduceColumns(
     {reducer: ee.Reducer.minMax(), selectors: ['system:time_start']}));
   var firstDate = ee.Date(dataDateRange.get('min'));
@@ -694,13 +638,11 @@ function chartTimeSeries() {
   var targetCol = ee.ImageCollection.fromImages(seq.map(function(i) {
     return ee.Image().set({'millis': i, 'system:time_start': ee.Date(i)});
   }));
-  
   var joinFilter = ee.Filter.maxDifference({
     difference: 8.64e7*4, // 4 days (9-day composite)
     leftField: 'millis',
     rightField: 'millis'});
   targetCol = ee.Join.saveAll('matches').apply(targetCol, no2ImgTs, joinFilter);
-  
   var compCol5 = targetCol.map(function(img) {
     var imgCol = ee.ImageCollection.fromImages(img.get('matches'));
     var imgComp = imgCol.reduce(ee.Reducer.percentile({percentiles: [25, 50, 75], outputNames: ['p25', 'p50', 'p75']}));
@@ -721,7 +663,6 @@ function chartTimeSeries() {
   } else if(aoiArea > 1e11) {
     scale = 5000;
   }
-
   var no2FcTs = ee.FeatureCollection(compCol5.map(function(img) {
     var stat = ee.Image(img)
       .multiply(thisData.scalar)
@@ -739,11 +680,8 @@ function chartTimeSeries() {
       'year': ee.Algorithms.String(imgDate.get('year'))
     });
   }));
-  
-  
   var leftMapDate = ee.Date(ee.List(leftDatePanel.widgets().get(1).getValue()).get(0));
   var rightMapDate = ee.Date(ee.List(rightDatePanel.widgets().get(1).getValue()).get(0));
-  
   var mapPoints = ee.FeatureCollection([
     ee.Feature(null, {
       'system:time_start': leftMapDate.millis(),
@@ -756,9 +694,7 @@ function chartTimeSeries() {
     }
     )
   ]);
-  
   no2FcTs = no2FcTs.merge(mapPoints);
-  
   var chart = ui.Chart.feature.groups({
     features: no2FcTs.sort('year'), 
     xProperty: 'doy',
@@ -812,7 +748,6 @@ function chartTimeSeries() {
     },
     legend: {position: 'right'},
   });
-  
   var fullTsChart = ui.Chart.feature.byFeature({
     features: no2FcTs.sort('system:time_start'),
     xProperty: 'system:time_start', 
@@ -878,15 +813,12 @@ function chartTimeSeries() {
       },
     },
   });
-  
   tsChart.widgets().set(2, chart);
   tsChart.widgets().set(1, fullTsChart);
   setChart();
 }
 
 // ###OUR  EVENT HANDLERS ###
-
-
 function clearRightGeom() {
   var nLayers = drawingToolsRight.layers().length();
   while (nLayers > 0) {
@@ -898,15 +830,11 @@ function clearRightGeom() {
 
 function drawChart() {
   aoi = drawingTools.layers().get(0).getEeObject();
-  
   clearRightGeom();
   drawingToolsRight.addLayer([aoi], null, 'FFF');
   drawingToolsRight.layers().get(0).setLocked(true);
-
   ui.url.set('aoi', aoi.toGeoJSONString());
-
   drawingTools.setShape(null);
-
   aoi.area(1000).evaluate(function(area) {
     aoiArea = area;
     if(area > maxAoiArea){
@@ -934,14 +862,12 @@ function makeColorBarParams(palette) {
     palette: palette,
   };
 }
-
 function makeLegend() {
   var colorBar = ui.Thumbnail({
     image: ee.Image.pixelLonLat().select(0),
     params: makeColorBarParams(thisData.visParams.palette),
     style: {stretch: 'horizontal', margin: '0px 8px', maxHeight: '20px'},
   });
-  
   var legendLabels = ui.Panel({
     widgets: [
       ui.Label(thisData.visParams.min, {margin: '4px 8px', fontSize: '12px'}), //
@@ -952,22 +878,18 @@ function makeLegend() {
     ],
     layout: ui.Panel.Layout.flow('horizontal')
   });
-  
   var legendTitle = ui.Label({
-    value: thisData.legendLabel + ' 9-day mean',
+    value: thisData.legendLabel + ' ,9-day mean',
     style: {fontWeight: 'bold', fontSize: '12px'}
   });
-  
   var legendPanel = ui.Panel([legendTitle, colorBar, legendLabels]);
   mapComparison.widgets().set(legendIndex, legendPanel);
 }
-
 makeLegend();
 
 // ### DRAWING TOOLS SETUP ###
 var chartStatus = ui.url.get('chart', 'cont');
 ui.url.set('chart', chartStatus);
-
 var chartButtonLabel = 'Show year-over-year chart';
 if(chartStatus == 'cont') {
   tsChart.widgets().get(1).style().set({shown: true});
@@ -977,9 +899,7 @@ if(chartStatus == 'cont') {
   tsChart.widgets().get(1).style().set({shown: false});
   tsChart.widgets().get(2).style().set({shown: true});  
 }
-
 var chartButton = ui.Button(chartButtonLabel, switchChart);
-
 function switchChart() {
   if(chartStatus == 'cont') {
     chartButton.setLabel('Show continuous chart');
@@ -995,7 +915,6 @@ function switchChart() {
     tsChart.widgets().get(2).style().set({shown: false});
   }
 }
-
 function setChart() {
   if(chartStatus == 'cont') {
     tsChart.widgets().get(1).style().set({shown: true});
@@ -1005,13 +924,11 @@ function setChart() {
     tsChart.widgets().get(2).style().set({shown: true});
   }
 }
-
 var symbol = {
   rectangle: '▮',
   polygon: '▲',
   point: '●',
 };
-
 var timeSeries = ui.Panel({
   widgets: [
     ui.Label('1. Select a drawing mode:'),
@@ -1035,8 +952,6 @@ var timeSeries = ui.Panel({
   style: {position: 'bottom-left'},
   layout: null,
 });
-
-
 var panelBreak50 = ui.Panel(null, null, {stretch: 'horizontal', height: '1px', backgroundColor: '000', margin: '8px 0px 8px 0px'});
 infoPanel.add(panelBreak50);
 infoPanel.add(timeSeries);
@@ -1045,12 +960,10 @@ function clearGeometry(){
   var layers = drawingTools.layers();
   layers.get(0).geometries().remove(layers.get(0).geometries().get(0));
 }
-
 function clearGeometryRight(){
   var layers = drawingToolsRight.layers();
   layers.get(0).geometries().remove(layers.get(0).geometries().get(0));
 }
-
 var drawType = '';
 function drawRectangle(){
   drawType = 'rectangle';
@@ -1059,7 +972,6 @@ function drawRectangle(){
   drawingTools.setShape('rectangle');
   drawingTools.draw();
 }
-
 function drawPolygon(){
   drawType = 'polygon';
   clearGeometry();
@@ -1067,7 +979,6 @@ function drawPolygon(){
   drawingTools.setShape('polygon');
   drawingTools.draw();
 }
-
 function drawPoint(){
   drawType = 'point';
   clearGeometry();
@@ -1075,9 +986,8 @@ function drawPoint(){
   drawingTools.setShape('point');
   drawingTools.draw();
 }
-
 drawingTools.onEdit(ui.util.debounce(drawChart, 500));
 drawingTools.onDraw(ui.util.debounce(drawChart, 500));
-
 var panelBreak100 = ui.Panel(null, null, {stretch: 'horizontal', height: '1px', backgroundColor: '000', margin: '8px 0px 8px 0px'});
 infoPanel.add(panelBreak100);
+
